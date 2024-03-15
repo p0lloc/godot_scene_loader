@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bevy::{
     asset::{AssetServer, Assets, Handle},
     ecs::{
@@ -21,6 +23,11 @@ pub mod mesh;
 pub mod physics;
 pub mod util;
 
+pub struct SpawnedEntity {
+    pub id: Entity,
+    pub entity_type: String,
+}
+
 /// Loads a [SceneWorld] into Bevy by spawning all the entities in Bevy format.
 pub fn load_scene_to_bevy(
     world: &SceneWorld,
@@ -29,10 +36,21 @@ pub fn load_scene_to_bevy(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     assets: &Res<AssetServer>,
-) {
+) -> HashMap<String, SpawnedEntity> {
+    let mut spawned_entities = HashMap::new();
     for entity in &world.entities {
-        spawn_entity(world, entity, commands, meshes, materials, assets);
+        spawn_entity(
+            world,
+            entity,
+            commands,
+            meshes,
+            materials,
+            assets,
+            &mut spawned_entities,
+        );
     }
+
+    return spawned_entities;
 }
 
 /// Spawns a [WorldEntity] from [SceneWorld] into the Bevy scene.
@@ -43,6 +61,7 @@ pub fn spawn_entity(
     meshes: &mut ResMut<Assets<Mesh>>,
     materials: &mut ResMut<Assets<StandardMaterial>>,
     assets: &Res<AssetServer>,
+    mut spawned_entities: &mut HashMap<String, SpawnedEntity>,
 ) -> Option<Entity> {
     let relative_transform = get_transform_from_data(&entity.data).unwrap_or(Transform::IDENTITY);
 
@@ -61,11 +80,26 @@ pub fn spawn_entity(
         return None;
     };
 
+    spawned_entities.insert(
+        entity.name.clone(),
+        SpawnedEntity {
+            id: entity_id,
+            entity_type: entity.entity_type.clone(),
+        },
+    );
+
     // Spawn the children of this entity and add them as Bevy children.
     if let Some(children) = &entity.children {
         for child in children {
-            if let Some(child_id) = spawn_entity(world, &child, commands, meshes, materials, assets)
-            {
+            if let Some(child_id) = spawn_entity(
+                world,
+                &child,
+                commands,
+                meshes,
+                materials,
+                assets,
+                &mut spawned_entities,
+            ) {
                 commands.entity(entity_id).add_child(child_id);
             }
         }

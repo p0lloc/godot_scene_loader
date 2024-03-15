@@ -55,6 +55,7 @@ impl WorldEntityJson {
     pub fn parse(&self) -> WorldEntity {
         WorldEntity {
             name: self.name.clone(),
+            entity_type: self.entity_type.clone(),
             data: self.parse_data(),
             metadata: self.metadata.clone(),
             children: self
@@ -68,6 +69,7 @@ impl WorldEntityJson {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct WorldEntity {
     pub name: String,
+    pub entity_type: String,
     pub data: EntityData,
     pub metadata: HashMap<String, Value>,
     pub children: Option<Vec<WorldEntity>>,

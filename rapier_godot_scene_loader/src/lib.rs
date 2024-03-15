@@ -47,6 +47,7 @@ pub enum SpawnedWorldEntityData {
 }
 
 pub struct SpawnedWorldEntity {
+    pub entity_type: String,
     pub data: SpawnedWorldEntityData,
     pub transform: NodeTransform,
     pub metadata: HashMap<String, Value>,
@@ -83,7 +84,12 @@ impl Default for NodeTransform {
 pub fn load_world_to_rapier(
     world: &SceneWorld,
     transform: Option<Matrix4<f32>>,
-) -> (RigidBodySet, ColliderSet, IslandManager) {
+) -> (
+    RigidBodySet,
+    ColliderSet,
+    IslandManager,
+    HashMap<String, SpawnedWorldEntity>,
+) {
     let mut bodies = RigidBodySet::new();
     let mut colliders = ColliderSet::new();
     let mut islands = IslandManager::new();
@@ -102,7 +108,7 @@ pub fn load_world_to_rapier(
         );
     }
 
-    return (bodies, colliders, islands);
+    return (bodies, colliders, islands, entities);
 }
 
 fn get_entity_transform(entity: &WorldEntity) -> Option<Matrix4<f32>> {
@@ -131,7 +137,7 @@ fn spawn_entity(
     islands: &mut IslandManager,
     resources: &HashMap<String, WorldResource>,
     entities: &mut HashMap<String, SpawnedWorldEntity>,
-) -> Option<()> {
+) -> Option<SpawnedWorldEntityData> {
     let relative_transform = get_or_return_val!(get_entity_transform(entity), None);
     let absolute_transform = parent_transform * relative_transform;
     let node_transform = NodeTransform::from_matrix(&absolute_transform);
@@ -162,7 +168,7 @@ fn spawn_entity(
         }
     }
 
-    return Some(());
+    return data;
 }
 
 pub fn spawn_body(
@@ -304,6 +310,7 @@ fn spawn_entity_data(
         entities.insert(
             entity.name.clone(),
             SpawnedWorldEntity {
+                entity_type: entity.entity_type.clone(),
                 transform: absolute_transform.clone(),
                 metadata: entity.metadata.clone(),
                 data: data.clone(),
