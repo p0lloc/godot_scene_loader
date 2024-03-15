@@ -1,0 +1,16 @@
+[package]
+name = "bevy_godot_scene_loader"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+bevy_rapier = ["dep:bevy_rapier3d"]
+
+[dependencies]
+common = { path = "../common" }
+bevy = { version = "0.13.0" }
+serde_json = "1.0.114"
+
+bevy_rapier3d = { version = "0.25.0", optional = true }
